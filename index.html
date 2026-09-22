@@ -2854,6 +2854,12 @@
     (function () {
       "use strict";
 
+      // ── FORCE TOP SCROLL ON LOAD ─────────────────────────────────────────────
+      if (history.scrollRestoration) {
+        history.scrollRestoration = 'manual';
+      }
+      window.scrollTo(0, 0);
+
       // ── VIDEO ─────────────────────────────────────────────────────────────────
       // All-intra encoded with ffmpeg (keyint=1:min-keyint=1).
       // Every frame is a keyframe → instant random-access on seek.
