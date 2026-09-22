@@ -3697,9 +3697,13 @@
         attached = true;
         if (clip) {
           clip.addEventListener("loadedmetadata", function () {
-            duration = clip.duration || 0;
+            duration = clip.duration || 5.0;
             clip.pause(); readScroll(); seekAt = seekTo;
             try { clip.currentTime = seekAt; } catch (e) { }
+          });
+          clip.addEventListener("error", function () {
+            if (!duration) duration = 5.0; // Fallback so page scrolling isn't permanently broken
+            start();
           });
           clip.addEventListener("loadeddata", start);
           clip.addEventListener("canplaythrough", start);
@@ -3746,14 +3750,12 @@
         var signal = ctrl ? ctrl.signal : undefined;
         var bailed = false;
 
-        // 1.5s safety: if fetch is slow, stream directly instead of blocking user
         var bail = setTimeout(function () {
           bailed = true;
           if (ctrl) ctrl.abort();
-          setProgress(1); attach(VIDEO_URL);
-        }, 1500);
+          setProgress(1); 
+        }, 3000); // give it a bit more time
 
-        // Start preloading video, but also attach immediately so video & page don't wait
         attach(VIDEO_URL);
 
         fetch(VIDEO_URL, signal ? { signal: signal } : {})
@@ -3775,7 +3777,8 @@
           .then(function (blob) {
             if (bailed) return;
             clearTimeout(bail); setProgress(1);
-            if (clip) { clip.src = URL.createObjectURL(blob); clip.load(); }
+            // DO NOT set clip.src to Blob URL. It breaks playback on some devices/browsers.
+            // We rely on the native video tag fetching it (potentially from cache).
           })
           .catch(function () {
             if (bailed) return;
